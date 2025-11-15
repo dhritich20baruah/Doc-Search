@@ -78,7 +78,7 @@ const UploadForm = () => {
   };
 
   return (
-    <div className="p-6 border rounded-xl shadow-2xl bg-white max-w-xl mx-auto font-sans">
+    <div className="p-6 rounded-xl shadow-2xl bg-white max-w-xl mx-auto font-sans">
       <h3 className="text-2xl font-extrabold mb-4 text-gray-800">
         Document Uploading and Indexing
       </h3>

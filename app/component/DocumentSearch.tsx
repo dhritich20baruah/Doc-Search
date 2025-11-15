@@ -38,7 +38,7 @@ export default function DocumentSearch() {
   };
 
   return (
-    <div className="p-6 border rounded-xl shadow-2xl bg-white max-w-2xl mx-auto font-sans">
+    <div className="p-6 rounded-xl shadow-2xl bg-white max-w-2xl mx-auto font-sans">
       <h3 className="text-3xl font-extrabold mb-4 text-gray-800 flex items-center">
         <Zap className="w-6 h-6 mr-2 text-blue-600" />
         Search Internal Documents

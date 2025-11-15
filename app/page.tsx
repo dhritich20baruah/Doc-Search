@@ -13,15 +13,24 @@ export default function Home() {
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-gray-600 space-y-8">
-      <DocumentSearch/>
-      <button
-        className="bg-amber-700 text-white p-3 cursor-pointer"
-        onClick={() => setVisible(visible => !visible)}
-      >
-        Upload
-      </button>
-      {visible && <UploadForm />}
+    <div className="flex flex-col min-h-screen items-center justify-center bg-linear-to-r from-blue-500 to-pink-300 space-y-8 relative">
+      {visible ? (
+        <div className="shadow-2xl shadow-black">
+          <DocumentSearch />
+        </div>
+      ) : (
+        <div className="shadow-2xl shadow-black">
+        <UploadForm />
+          </div>
+      )}
+      <div className="absolute top-20 right-20">
+           <button
+            className="bg-red-700 text-white p-2 cursor-pointer text-3xl rounded-md hover:text-red-700 hover:bg-white"
+            onClick={() => setVisible((visible) => !visible)}
+          >
+            {visible ? "+" : "X"}
+          </button>
+      </div>
     </div>
   );
 }
