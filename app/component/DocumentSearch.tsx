@@ -28,6 +28,8 @@ export default function DocumentSearch() {
           "No documents matched your search query. Try different keywords."
         );
       }
+
+      setLoading(false)
     } catch (error) {
       console.error("Search API Error:", error);
       setError("An error occurred during search. Check console.");
@@ -39,7 +41,7 @@ export default function DocumentSearch() {
     <div className="p-6 border rounded-xl shadow-2xl bg-white max-w-2xl mx-auto font-sans">
       <h3 className="text-3xl font-extrabold mb-4 text-gray-800 flex items-center">
         <Zap className="w-6 h-6 mr-2 text-blue-600" />
-        Document Full-Text Search
+        Search Internal Documents
       </h3>
 
       {/* Search Input Form */}

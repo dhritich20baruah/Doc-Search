@@ -15,14 +15,15 @@ export async function GET(request: Request) {
 
   const searchQuery = query.trim();
 
+  
   try {
     let baseQuery = supabase
-      .from("marketing_documents")
-      .select("*")
-      .textSearch("tsv_content", searchQuery, {
-        type: "websearch",
-      });
-
+    .from("marketing_documents")
+    .select("*")
+    .textSearch("tsv_content", searchQuery, {
+      type: "websearch",
+    });
+    
     const { data, error } = await baseQuery.limit(50);
 
     if (error) {

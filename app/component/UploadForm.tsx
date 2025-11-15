@@ -1,11 +1,17 @@
 "use client";
 import React, { useState } from "react";
 import axios from "axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
+import pdfToText from "react-pdftotext";
+
+export async function extractTextFromPdf(file: File) {
+  let fullText = await pdfToText(file);
+  return fullText.trim();
+}
 
 const UploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [contentToIndex, setContentToIndex] = useState("");
+  //const [contentToIndex, setContentToIndex] = useState("");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +22,7 @@ const UploadForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !contentToIndex.trim() || !title.trim()) {
+    if (!file || !title.trim()) {
       setMessage(
         "Please select a file, provide a title, and paste content for indexing."
       );
@@ -25,6 +31,7 @@ const UploadForm = () => {
 
     setLoading(true);
     setMessage("Converting file, uploading, and indexing...");
+    const extractedContent = await extractTextFromPdf(file);
 
     // 1. Convert File to Base64 String
     const reader = new FileReader();
@@ -44,11 +51,9 @@ const UploadForm = () => {
         const payload = {
           fileName: file.name,
           base64Content: base64Data,
-          content: contentToIndex, // The text for FTS indexing
+          content: extractedContent, // The text for FTS indexing
           title: title,
         };
-
-        console.log(payload);
 
         const response = await axios.post("/api/upload-index", payload);
 
@@ -56,7 +61,7 @@ const UploadForm = () => {
           `Success! Indexed file: ${response.data.document.file_name}`
         );
         setFile(null);
-        setContentToIndex("");
+        //setContentToIndex("");
         setTitle("");
       } catch (error) {
         setMessage("Indexing failed. Check console for details.");
@@ -75,12 +80,9 @@ const UploadForm = () => {
   return (
     <div className="p-6 border rounded-xl shadow-2xl bg-white max-w-xl mx-auto font-sans">
       <h3 className="text-2xl font-extrabold mb-4 text-gray-800">
-        1-Step Document Indexing
+        Document Uploading and Indexing
       </h3>
-      <p className="text-sm text-gray-500 mb-6">
-        Uploads the file for storage and indexes the **pasted text** for search.
-      </p>
-
+ 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
         <div className="space-y-1">
@@ -113,21 +115,6 @@ const UploadForm = () => {
                 file:text-sm file:font-semibold
                 file:bg-blue-50 file:text-blue-700
                 hover:file:bg-blue-100"
-          />
-        </div>
-
-        {/* Content to Index */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">
-            Pasted Content (The Searchable Text)
-          </label>
-          <textarea
-            placeholder="Paste the document's extracted text content here. This is what the search engine will index."
-            value={contentToIndex}
-            onChange={(e) => setContentToIndex(e.target.value)}
-            rows={6}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-blue-500 focus:border-blue-500 text-black"
           />
         </div>
 
