@@ -5,8 +5,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const query = searchParams.get("q");
-  const team = searchParams.get("team");
-  const project = searchParams.get("project");
 
   if (!query) {
     return NextResponse.json(
@@ -24,13 +22,6 @@ export async function GET(request: Request) {
       .textSearch("tsv_content", searchQuery, {
         type: "websearch",
       });
-
-    if (team) {
-      baseQuery = baseQuery.eq("team", team);
-    }
-    if (project) {
-      baseQuery = baseQuery.eq("project", project);
-    }
 
     const { data, error } = await baseQuery.limit(50);
 
