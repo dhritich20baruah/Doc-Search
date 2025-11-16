@@ -99,6 +99,20 @@ CREATE INDEX content_search_idx ON public.marketing_documents USING GIN (content
 ```
 Set up Storage Bucket: Create a new Storage Bucket named 'marketing-documents' in Supabase.
 
+## To setup locally
+  1. Clone the repository
+  2. Run
+     ```
+     npm install
+     ```
+  3. Create a .env.local file in the root directory
+  4. Create environment variables of supabase url, supabase key and gemini api key as NEXT_PUBLIC_SUPABASE_URL, SUPABASE_KEY and GEMINI_API_KEY respectively.
+  5. Run
+     ```
+     npm run dev
+     ```
+  6. If the setup is successful the application will run at localhost:3000. 
+
 ## Key Technical Decisions
 
 1. Client-Side OCR/Extraction
