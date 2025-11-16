@@ -2,7 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { MarketingDocument } from "@/types/document";
-import { Search, Loader2, FileText, Link, Zap } from "lucide-react";
+import { Search, Loader2, FileText, Link, Zap, XCircle, Tag, Users, Folder } from "lucide-react";
 
 export default function DocumentSearch() {
   const [query, setQuery] = useState("");
@@ -37,8 +37,14 @@ export default function DocumentSearch() {
     }
   };
 
+   const handleClear = () => {
+    setQuery('');
+    setResults([]);
+    setError(null);
+  }
+
   return (
-    <div className="p-6 rounded-xl shadow-2xl bg-white max-w-2xl mx-auto font-sans">
+   <div className="p-6 rounded-xl shadow-2xl bg-white max-w-2xl mx-auto font-sans">
       <h3 className="text-3xl font-extrabold mb-4 text-gray-800 flex items-center">
         <Zap className="w-6 h-6 mr-2 text-blue-600" />
         Search Internal Documents
@@ -56,8 +62,8 @@ export default function DocumentSearch() {
         />
         <button
           type="submit"
-          disabled={loading}
-          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-gray-400 flex items-center"
+          disabled={loading || !query.trim()}
+          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 disabled:bg-gray-400 flex items-center cursor-pointer"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -65,6 +71,18 @@ export default function DocumentSearch() {
             <Search className="h-5 w-5" />
           )}
         </button>
+        
+        {/* Clear Button */}
+        <button
+          type="button"
+          onClick={handleClear}
+          disabled={loading || (!query && results.length === 0)}
+          className="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 disabled:bg-gray-400 flex items-center cursor-pointer"
+          title="Clear Search"
+        >
+          <XCircle className="h-5 w-5" />
+        </button>
+
       </form>
 
       {/* Results Display */}
@@ -78,7 +96,7 @@ export default function DocumentSearch() {
       {!loading && results.length > 0 && (
         <div className="mt-6 space-y-3">
           <h4 className="text-lg font-semibold text-gray-700 border-b pb-1">
-            Found {results.length} Result{results.length !== 1 ? "s" : ""}
+            Found {results.length} Result{results.length !== 1 ? 's' : ''}
           </h4>
 
           <ul className="space-y-4">
@@ -93,6 +111,24 @@ export default function DocumentSearch() {
                     {doc.file_name}
                   </span>
                 </div>
+                
+                {/* --- Display Categorization Data --- */}
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-gray-600 mb-3">
+                    <span className="flex items-center">
+                        <Tag className="w-3 h-3 mr-1 text-purple-500" />
+                        Topic: <span className="ml-1 font-semibold">{doc.topic}</span>
+                    </span>
+                    <span className="flex items-center">
+                        <Folder className="w-3 h-3 mr-1 text-green-500" />
+                        Project: <span className="ml-1 font-semibold">{doc.project}</span>
+                    </span>
+                    <span className="flex items-center">
+                        <Users className="w-3 h-3 mr-1 text-orange-500" />
+                        Team: <span className="ml-1 font-semibold">{doc.team}</span>
+                    </span>
+                </div>
+                {/* ---------------------------------- */}
+
 
                 <p className="text-sm text-gray-500 mb-2 truncate">
                   Indexed Text Snippet: {doc.content.substring(0, 100)}...
@@ -102,7 +138,7 @@ export default function DocumentSearch() {
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-150"
+                  className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-150 mt-2"
                 >
                   <Link className="w-4 h-4 mr-1" />
                   View Original File
@@ -111,12 +147,6 @@ export default function DocumentSearch() {
             ))}
           </ul>
         </div>
-      )}
-
-      {!loading && !error && results.length === 0 && query.trim() && (
-        <p className="text-center text-gray-500 mt-6">
-          Search is complete. No matching documents found for "{query}".
-        </p>
       )}
     </div>
   );
