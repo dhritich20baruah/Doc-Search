@@ -7,6 +7,9 @@ export interface MarketingDocument {
   topic: string;
   project: string;
   team: string;
+  // --- NEW: Multi-Tenancy Fields ---
+  user_id: string;
+  organization_id: string;
 }
 
 export type NewDocument = Omit<MarketingDocument, "id" | "created_at">;
