@@ -1,17 +1,40 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { MarketingDocument } from "@/types/document";
 import UploadForm from "./component/UploadForm";
 import DocumentSearch from "./component/DocumentSearch";
 import { Search, Upload, FileUp, UploadCloud } from "lucide-react";
+import { Auth } from "./component/Auth";
+import { supabase } from "@/lib/supabase-client";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<MarketingDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [session, setSession] = useState<any>(null);
+
+  const fetchSession = async () => {
+    const currentSession = await supabase.auth.getSession();
+    setSession(currentSession.data.session);
+  }
+
+  useEffect(()=>{
+    fetchSession();
+    const {data: authListener} = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [])
+
+    const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="flex flex-col min-h-screen items-center justify-center bg-linear-to-r from-blue-500 to-pink-300 space-y-8 relative">
