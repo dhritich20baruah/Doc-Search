@@ -8,31 +8,31 @@ import DocumentSearch from "./component/DocumentSearch";
 import { Search, Upload, FileUp, UploadCloud } from "lucide-react";
 import { Auth } from "./component/Auth";
 import { supabase } from "@/lib/supabase-client";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<MarketingDocument[]>([]);
-  const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(true);
   const [session, setSession] = useState<any>(null);
 
   const fetchSession = async () => {
     const currentSession = await supabase.auth.getSession();
     setSession(currentSession.data.session);
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchSession();
-    const {data: authListener} = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [])
+  }, []);
 
-    const logout = async () => {
+  const logout = async () => {
     await supabase.auth.signOut();
   };
 
@@ -44,16 +44,20 @@ export default function Home() {
         </div>
       ) : (
         <div className="shadow-2xl shadow-black">
-        <UploadForm />
-          </div>
+          <UploadForm />
+        </div>
       )}
       <div className="absolute top-20 right-20">
-           <button
-            className="bg-red-700 text-white p-2 cursor-pointer text-md rounded-md hover:text-red-700 hover:bg-white"
-            onClick={() => setVisible((visible) => !visible)}
-          >
-            {visible ? <Upload className="w-5 h-5" /> : <Search className="h-5 w-5" />}
-          </button>
+        <button
+          className="bg-red-700 text-white p-2 cursor-pointer text-md rounded-md hover:text-red-700 hover:bg-white"
+          onClick={() => setVisible((visible) => !visible)}
+        >
+          {visible ? (
+            <Upload className="w-5 h-5" />
+          ) : (
+            <Search className="h-5 w-5" />
+          )}
+        </button>
       </div>
     </div>
   );
