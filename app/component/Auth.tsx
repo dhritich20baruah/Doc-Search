@@ -1,16 +1,20 @@
 "use client"
 import { useState } from "react";
 import { supabase } from "../../lib/supabase-client";
+import { useRouter } from "next/navigation";
 
 export const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password });
+          router.push(`/Dashboard/`)
+      
       if (error) {
         console.error("Error signing up: ", error.message);
         return;
@@ -28,7 +32,7 @@ export const Auth = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+    <div className="">
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           {isSignUp ? "Create an Account" : "Welcome Back"}

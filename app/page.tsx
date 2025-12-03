@@ -6,13 +6,15 @@ import { MarketingDocument } from "@/types/document";
 import UploadForm from "./component/UploadForm";
 import DocumentSearch from "./component/DocumentSearch";
 import { Search, Upload, FileUp, UploadCloud } from "lucide-react";
-import { Auth } from "./component/Auth";
 import { supabase } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [visible, setVisible] = useState(true);
   const [session, setSession] = useState<any>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const fetchSession = async () => {
     const currentSession = await supabase.auth.getSession();
@@ -32,32 +34,76 @@ export default function Home() {
     };
   }, []);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      router.push(`/Dashboard/`);
+
+      if (error) {
+        console.error("Error signing up: ", error.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        console.error("Error signing in: ", error.message);
+        return;
+      }
+    }
   };
 
   return (
     <div className="flex flex-col min-h-screen items-center justify-center bg-linear-to-r from-blue-500 to-pink-300 space-y-8 relative">
-      {visible ? (
-        <div className="shadow-2xl shadow-black">
-          <DocumentSearch />
+      <div className="">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+            {isSignUp ? "Create an Account" : "Welcome Back"}
+          </h2>
+
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+            <input
+              type="email"
+              name="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            />
+
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            />
+
+            <button
+              type="submit"
+              className="w-full py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition duration-200"
+            >
+              {isSignUp ? "Sign Up" : "Sign In"}
+            </button>
+          </form>
+
+          <div className="text-center mt-4">
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-orange-600 hover:underline font-medium"
+            >
+              {isSignUp
+                ? "Already have an account? Sign In"
+                : "Don't have an account? Sign Up"}
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="shadow-2xl shadow-black">
-          <UploadForm />
-        </div>
-      )}
-      <div className="absolute top-20 right-20">
-        <button
-          className="bg-red-700 text-white p-2 cursor-pointer text-md rounded-md hover:text-red-700 hover:bg-white"
-          onClick={() => setVisible((visible) => !visible)}
-        >
-          {visible ? (
-            <Upload className="w-5 h-5" />
-          ) : (
-            <Search className="h-5 w-5" />
-          )}
-        </button>
       </div>
     </div>
   );
