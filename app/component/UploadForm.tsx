@@ -4,6 +4,7 @@ import axios from "axios";
 import { Loader2, Zap } from "lucide-react";
 import pdfToText from "react-pdftotext";
 import Tesseract from "tesseract.js";
+import { useSession } from "../context/SessionContext";
 
 const isImageFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -40,8 +41,8 @@ export async function extractTextFromPdf(file: File) {
 }
 
 const UploadForm = () => {
+  const { session, setSession } = useSession();
   const [file, setFile] = useState<File | null>(null);
-  //const [contentToIndex, setContentToIndex] = useState("");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,6 +114,9 @@ const UploadForm = () => {
           base64Content: base64Data,
           content: extractedContent, // The text for FTS indexing
           title: title,
+          category: "category",
+          topic: "topic",
+          userId: session.user.id
         };
 
         const response = await axios.post("/api/upload-index", payload);

@@ -5,11 +5,9 @@ export interface MarketingDocument {
   file_url: string;
   content: string;
   topic: string;
-  project: string;
-  team: string;
+  category: string;
   // --- NEW: Multi-Tenancy Fields ---
   user_id: string;
-  organization_id: string;
 }
 
 export type NewDocument = Omit<MarketingDocument, "id" | "created_at">;

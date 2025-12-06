@@ -1,4 +1,5 @@
 "use client";
+
 import {
   createContext,
   useContext,
@@ -13,7 +14,7 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-export function SessionProvider({ children }: {children: ReactNode}) {
+export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<any>(null);
 
   return (
@@ -23,11 +24,14 @@ export function SessionProvider({ children }: {children: ReactNode}) {
   );
 }
 
-
-export const useSession = () => {
+export function useSession() {
   const context = useContext(SessionContext);
+
   if (!context) {
-    throw new Error("useSession must be used inside a SessionProvider");
+    throw new Error("useSession must be used inside SessionProvider");
   }
+
   return context;
-};
+}
+
+export default SessionContext;

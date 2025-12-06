@@ -1,16 +1,11 @@
 "use client";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { MarketingDocument } from "@/types/document";
-import UploadForm from "./component/UploadForm";
-import DocumentSearch from "./component/DocumentSearch";
-import { Search, Upload, FileUp, UploadCloud } from "lucide-react";
+import { useEffect, useState, useContext } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
+import { useSession } from "./context/SessionContext";
 
 export default function Home() {
-  const [session, setSession] = useState<any>(null);
+  const { session, setSession } = useSession();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +14,9 @@ export default function Home() {
   const fetchSession = async () => {
     const currentSession = await supabase.auth.getSession();
     setSession(currentSession.data.session);
+    if (session) {
+      router.push(`/Dashboard/`);
+    }
   };
 
   useEffect(() => {
@@ -38,6 +36,7 @@ export default function Home() {
     e.preventDefault();
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password });
+      await fetchSession();
       router.push(`/Dashboard/`);
 
       if (error) {
@@ -49,6 +48,8 @@ export default function Home() {
         email,
         password,
       });
+      await fetchSession();
+      router.push(`/Dashboard/`);
       if (error) {
         console.error("Error signing in: ", error.message);
         return;
@@ -63,7 +64,6 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
             {isSignUp ? "Create an Account" : "Welcome Back"}
           </h2>
-
           <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
             <input
               type="email"

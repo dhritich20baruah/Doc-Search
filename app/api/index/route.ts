@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const newDoc: NewDocument = await request.json();
 
     const { data, error } = await supabase
-      .from("marketing_documents")
+      .from("documents")
       .insert([newDoc])
       .select();
 
