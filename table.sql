@@ -61,3 +61,11 @@ TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
+create policy "Enable insert for users based on user_id"
+on "public"."documents"
+as PERMISSIVE
+for INSERT
+to public
+with check (
+  (select auth.uid()) = user_id
+);

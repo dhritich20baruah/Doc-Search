@@ -44,6 +44,7 @@ const UploadForm = () => {
   const { session, setSession } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -59,9 +60,9 @@ const UploadForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title.trim()) {
+    if (!file || !title.trim() || !category.trim()) {
       setMessage(
-        "Please select a file, provide a title, and paste content for indexing."
+        "Please select a file, provide a title and category for indexing."
       );
       return;
     }
@@ -114,7 +115,7 @@ const UploadForm = () => {
           base64Content: base64Data,
           content: extractedContent, // The text for FTS indexing
           title: title,
-          category: "category",
+          category: category,
           topic: "topic",
           userId: session.user.id
         };
@@ -158,6 +159,21 @@ const UploadForm = () => {
             placeholder="e.g., Q4 Marketing Strategy"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black"
+          />
+        </div>
+
+        {/* Topic */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Finance"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
             required
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black"
           />
