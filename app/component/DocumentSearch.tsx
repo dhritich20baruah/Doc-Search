@@ -3,14 +3,12 @@ import { useState } from "react";
 import axios from "axios";
 import { MarketingDocument } from "@/types/document";
 import { Search, Loader2, FileText, Link, Zap, XCircle, Tag, Users, Folder } from "lucide-react";
-import { useSession } from "../context/SessionContext";
 
 export default function DocumentSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MarketingDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session, setSession } = useSession();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

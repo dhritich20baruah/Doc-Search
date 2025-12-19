@@ -5,10 +5,8 @@ import DocumentSearch from "../component/DocumentSearch";
 import { Search, Upload, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
-import { useSession } from "../context/SessionContext";
 
-const Dashboard = () => {
-  const { session, setSession } = useSession();
+const Dashboard = ({session}) => {
   const [visible, setVisible] = useState(true);
   const router = useRouter();
 

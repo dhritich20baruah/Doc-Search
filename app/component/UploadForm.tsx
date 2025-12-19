@@ -4,7 +4,6 @@ import axios from "axios";
 import { Loader2, Zap } from "lucide-react";
 import pdfToText from "react-pdftotext";
 import Tesseract from "tesseract.js";
-import { useSession } from "../context/SessionContext";
 
 const isImageFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -41,7 +40,6 @@ export async function extractTextFromPdf(file: File) {
 }
 
 const UploadForm = () => {
-  const { session, setSession } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
