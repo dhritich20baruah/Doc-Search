@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { supabase } from "../../lib/supabase-client";
 import { useRouter } from "next/navigation";
 
@@ -7,32 +7,30 @@ export const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-          router.push(`/Dashboard/`)
+      const { error: signUpError } = await supabase.auth.signUp({ email, password });
       
-      if (error) {
-        console.error("Error signing up: ", error.message);
+      if (signUpError) {
+        console.error("Error signing up: ", signUpError.message);
         return;
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) {
-        console.error("Error signing in: ", error.message);
+      if (signInError) {
+        console.error("Error signing in: ", signInError.message);
         return;
       }
     }
   };
 
   return (
-    <div className="">
+    <div className="flex flex-col min-h-screen items-center justify-center bg-linear-to-r from-blue-500 to-pink-300 space-y-8 relative">
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           {isSignUp ? "Create an Account" : "Welcome Back"}
@@ -44,7 +42,7 @@ export const Auth = () => {
             name="email"
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             placeholder="Enter your email"
             className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
           />
@@ -54,7 +52,7 @@ export const Auth = () => {
             name="password"
             id="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             placeholder="Enter your password"
             className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
           />

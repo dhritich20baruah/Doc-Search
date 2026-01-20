@@ -32,9 +32,9 @@ export async function POST(request: Request) {
   );
 
   try {
-    const { fileName, base64Content, content, title, category, topic, userId } = await request.json();
+    const { fileName, base64Content, content, title, category, topic, user_id } = await request.json();
 
-    if (!fileName || !base64Content || !content || !title || !userId) {
+    if (!fileName || !base64Content || !content || !title || !user_id) {
       return NextResponse.json(
         { message: "Missing required fields (file, content, or title)." },
         { status: 400 }
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       content: content,
       topic: topic,
       category: category,
-      user_id: userId,
+      user_id: user_id,
     };
 
     const { data: insertData, error: insertError } = await supabaseService

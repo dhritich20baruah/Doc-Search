@@ -4,6 +4,7 @@ import axios from "axios";
 import { Loader2, Zap } from "lucide-react";
 import pdfToText from "react-pdftotext";
 import Tesseract from "tesseract.js";
+import { supabase } from "@/lib/supabase-client";
 
 const isImageFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -39,7 +40,7 @@ export async function extractTextFromPdf(file: File) {
   return fullText.trim();
 }
 
-const UploadForm = () => {
+const UploadForm = (user_id: any) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
@@ -64,7 +65,6 @@ const UploadForm = () => {
       );
       return;
     }
-
     if (!isPdfFile(file) && !isImageFile(file)) {
       setMessage("Error: Only PDF, PNG, JPG, or JPEG files are supported.");
       return;
@@ -93,6 +93,11 @@ const UploadForm = () => {
 
     setMessage('Extraction complete. Preparing for upload and categorization...');
 
+    const {data: {session}} =  await supabase.auth.getSession()
+
+    const userId = session?.user.id
+    console.log("userid: ", userId)
+    
     // 1. Convert File to Base64 String
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -115,7 +120,7 @@ const UploadForm = () => {
           title: title,
           category: category,
           topic: "topic",
-          userId: session.user.id
+          user_id: userId
         };
 
         const response = await axios.post("/api/upload-index", payload);
