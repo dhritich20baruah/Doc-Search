@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     let baseQuery = supabase
     .from("documents")
     .select("*")
-    .textSearch("tsv_content", searchQuery, {
+    .textSearch("tsv_content, category, file_name", searchQuery, {
       type: "websearch",
     });
     

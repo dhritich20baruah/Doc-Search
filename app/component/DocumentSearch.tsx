@@ -3,12 +3,27 @@ import { useState } from "react";
 import axios from "axios";
 import { MarketingDocument } from "@/types/document";
 import { Search, Loader2, FileText, Link, Zap, XCircle, Tag, Users, Folder } from "lucide-react";
+import { supabase } from "@/lib/supabase-client";
 
 export default function DocumentSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MarketingDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchAllDocs = async () => {
+    const { error, data } = await supabase
+      .from("documents")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching task:", error.message);
+      return;
+    }
+
+    setResults(data);
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +72,7 @@ export default function DocumentSearch() {
           placeholder="Search keywords (e.g., 'Q4 sales report' or 'marketing budget 2025')"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+          className="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm w-full"
           disabled={loading}
         />
         <button
@@ -70,6 +85,16 @@ export default function DocumentSearch() {
           ) : (
             <Search className="h-5 w-5" />
           )}
+        </button>
+
+         <button
+          type="button"
+          onClick={fetchAllDocs}
+          disabled={loading || (!query && results.length === 0)}
+          className="p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-150 disabled:bg-gray-400 flex items-center cursor-pointer"
+          title="Clear Search"
+        >
+          All Docs
         </button>
         
         {/* Clear Button */}
