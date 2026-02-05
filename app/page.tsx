@@ -1,9 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
+"use client"
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
+import {LogOut, Zap} from 'lucide-react';
+import Dashboard from "./component/Dashboard";
 import { Auth } from "./component/Auth";
-import Dashboard from "./Dashboard/page";
-import { Search, Upload, LogOut } from "lucide-react";
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
@@ -33,13 +33,21 @@ export default function Home() {
   return (
     <>
       {session ? (
-        <div className="w-full flex flex-col min-h-screen items-center justify-center bg-linear-to-r from-blue-500 to-pink-300 space-y-8 relative">
-          <button
-            className="bg-red-700 text-white p-2 mx-3 cursor-pointer text-md rounded-md hover:text-red-700 hover:bg-white absolute top-20 right-32"
+        <div className="w-full min-h-screen bg-linear-to-r from-blue-800 to-pink-300 space-y-5 relative">
+          <nav className="flex justify-between p-5">
+            <div className="flex items-center space-x-2">
+            <div className="bg-indigo-600 p-1.5 rounded-lg">
+              <Zap className="w-5 h-5 text-white fill-current" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-100">DocuIntel</span>
+            </div>
+            <button
+            className="bg-red-700 text-white p-2 mx-3 cursor-pointer text-md rounded-md hover:text-red-700 hover:bg-white"
             onClick={logout}
           >
             <LogOut className="w-5 h-5" />
           </button>
+          </nav>
           <Dashboard />
         </div>
       ) : (

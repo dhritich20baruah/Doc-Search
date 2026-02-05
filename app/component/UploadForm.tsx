@@ -1,10 +1,14 @@
 "use client";
 import React, { useState } from "react";
-import axios from "axios";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2, FileUp, CheckCircle2, AlertCircle } from "lucide-react";
 import pdfToText from "react-pdftotext";
 import Tesseract from "tesseract.js";
 import { supabase } from "@/lib/supabase-client";
+
+interface insertError {
+  message: string,
+  status?: number
+}
 
 const isImageFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -26,7 +30,7 @@ async function runTesseractOcr(file: File): Promise<string> {
       "eng", // Language: English
       {
         logger: (m) => console.log(m.status, m.progress), // Show OCR progress
-      }
+      },
     );
     return text.trim();
   } catch (e) {
@@ -40,11 +44,14 @@ export async function extractTextFromPdf(file: File) {
   return fullText.trim();
 }
 
-const UploadForm = (user_id: any) => {
+const UploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "info">(
+    "info",
+  );
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,97 +66,123 @@ const UploadForm = (user_id: any) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage("");
+    setMessageType("info");
+
     if (!file || !title.trim() || !category.trim()) {
+      setMessageType("error");
       setMessage(
-        "Please select a file, provide a title and category for indexing."
+        "Please select a file, provide a title and category for indexing.",
       );
-      return;
-    }
-    if (!isPdfFile(file) && !isImageFile(file)) {
-      setMessage("Error: Only PDF, PNG, JPG, or JPEG files are supported.");
       return;
     }
 
     setLoading(true);
-    setMessage("Converting file, uploading, and indexing...");
 
-    let extractedContent = "";
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const userId = session?.user.id;
+      const user_email = session?.user.email;
 
-    if (isImageFile(file)) {
-      setMessage("Extracting content from image using Tesseract OCR...");
-      extractedContent = await runTesseractOcr(file); // 🛑 AWAIT the result
-    } else if (isPdfFile(file)) {
-      setMessage("Extracting content from PDF using react-pdftotext...");
-      extractedContent = await extractTextFromPdf(file); // 🛑 AWAIT the result
-    }
+      if (!userId) {
+        throw new Error("You must be logged in to upload files.");
+      }
 
-    if (extractedContent.includes("ERROR") || extractedContent === "") {
+      setMessage("Extracting text content.....");
+      let extractedTextContent = "";
+
+      if (isImageFile(file)) {
+        extractedTextContent = await runTesseractOcr(file);
+      } else if (isPdfFile(file)) {
+        extractedTextContent = await extractTextFromPdf(file);
+      } else {
+        throw new Error("Unsupported file type.");
+      }
+
+      if (!extractedTextContent || extractedTextContent.includes("_ERROR")) {
+        throw new Error("Failed to extracted content from the file.");
+      }
+
+      setMessage("Uploading file to storage...");
+      const fileExt = file.name.split(".").pop();
+      const storagePath = `${userId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(storagePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("documents").getPublicUrl(storagePath);
+
+      setMessage("Indexing metadata....");
+
+      const { data: insertData, error: insertError } = await supabase
+        .from("documents")
+        .insert([
+          {
+            file_name: title,
+            file_url: publicUrl,
+            category: category,
+            user_id: userId,
+            user_email: user_email
+          },
+        ])
+        .select()
+        .single();
+
+      if(insertError) throw insertError
+
+      setMessageType("success");
       setMessage(
-        `Extraction failed: Extracted content was empty or contained an error.`
+        `Success! Document uploaded and indexed.`,
       );
+      setFile(null);
+      setTitle("");
+      setCategory("");
+
+      //Granular Segments logic
+      const paragraphs = extractedTextContent.split(/\n\s*\n/).map(p=>p.trim()).filter(p=>p.length>5);
+
+      const segments = paragraphs.map((para, index) => ({
+        doc_id: insertData.id,
+        content: para.trim(),
+        page_number: 1,
+        paragraph_number: index + 1,
+        user_email: user_email
+      }));
+
+      const { error: segmentError } = await supabase.from("document_segments").insert(segments).single()
+
+      // Reset file input manually
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (error: any) {
+      console.error("Process Failed:", error);
+      setMessageType("error");
+      setMessage(error.message || "An error occurred during upload.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setMessage('Extraction complete. Preparing for upload and categorization...');
-
-    const {data: {session}} =  await supabase.auth.getSession()
-
-    const userId = session?.user.id
-    console.log("userid: ", userId)
-    
-    // 1. Convert File to Base64 String
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.onload = async () => {
-      const base64Data = reader.result?.toString().split(",")[1]; // Get only the base64 part
-
-      if (!base64Data) {
-        setMessage("Error reading file data.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // 2. Send JSON payload to the simplified Route Handler
-        const payload = {
-          fileName: file.name,
-          base64Content: base64Data,
-          content: extractedContent, // The text for FTS indexing
-          title: title,
-          category: category,
-          topic: "topic",
-          user_id: userId
-        };
-
-        const response = await axios.post("/api/upload-index", payload);
-
-        setMessage(
-          `Success! Indexed file: ${response.data.document.file_name}`
-        );
-        setFile(null);
-        //setContentToIndex("");
-        setTitle("");
-      } catch (error) {
-        setMessage("Indexing failed. Check console for details.");
-        console.error("Upload Failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    reader.onerror = () => {
-      setMessage("Error reading file.");
-      setLoading(false);
-    };
   };
 
   return (
     <div className="p-6 rounded-xl shadow-2xl bg-white max-w-xl mx-auto font-sans">
-      <h3 className="text-2xl font-extrabold mb-4 text-gray-800">
-        Document Uploading and Indexing
-      </h3>
+      <div className="flex items-center space-x-2 mb-6">
+        <div className="p-2 bg-blue-50 rounded-lg">
+          <FileUp className="w-6 h-6 text-blue-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800">Document Portal</h3>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
@@ -169,9 +202,7 @@ const UploadForm = (user_id: any) => {
 
         {/* Topic */}
         <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">
-            Category
-          </label>
+          <label className="text-sm font-medium text-gray-700">Category</label>
           <input
             type="text"
             placeholder="e.g., Finance"
@@ -199,6 +230,14 @@ const UploadForm = (user_id: any) => {
                 file:bg-blue-50 file:text-blue-700
                 hover:file:bg-blue-100"
           />
+          <div className="flex flex-col items-center justify-center space-y-2 py-2">
+            <span className="text-sm font-medium text-blue-600">
+              {file ? file.name : "Click to select or drag and drop"}
+            </span>
+            <span className="text-xs text-gray-400">
+              PDF, PNG, JPG (Max 10MB)
+            </span>
+          </div>
         </div>
 
         <button
@@ -217,13 +256,24 @@ const UploadForm = (user_id: any) => {
         </button>
       </form>
       {message && (
-        <p
-          className={`mt-4 text-sm text-center font-medium ${
-            message.startsWith("Success") ? "text-green-600" : "text-red-600"
+        <div
+          className={`mt-6 p-4 rounded-xl flex items-center space-x-3 text-sm animate-in fade-in slide-in-from-top-2 ${
+            messageType === "success"
+              ? "bg-green-50 text-green-700 border border-green-100"
+              : messageType === "error"
+                ? "bg-red-50 text-red-700 border border-red-100"
+                : "bg-blue-50 text-blue-700 border border-blue-100"
           }`}
         >
-          {message}
-        </p>
+          {messageType === "success" ? (
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+          ) : messageType === "error" ? (
+            <AlertCircle className="w-5 h-5 shrink-0" />
+          ) : (
+            <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+          )}
+          <span className="font-medium">{message}</span>
+        </div>
       )}
     </div>
   );
